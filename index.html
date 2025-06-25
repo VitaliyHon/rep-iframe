@@ -7,6 +7,65 @@
     <title></title>
   </head>
   <body>
+    <!-- Declare global object for rep, needs to track events -->
+    <script>
+      var __assign =
+        (this && this.__assign) ||
+        function () {
+          return (__assign =
+            Object.assign ||
+            function (n) {
+              for (var i, o = 1, d = arguments.length; o < d; o++)
+                for (var l in (i = arguments[o]))
+                  Object.prototype.hasOwnProperty.call(i, l) && (n[l] = i[l]);
+              return n;
+            }).apply(this, arguments);
+        };
+      !(function () {
+        var n, i, o, d;
+        if (
+          !(null ===
+            (n = null === window || void 0 === window ? void 0 : window.rep) ||
+          void 0 === n
+            ? void 0
+            : n.on)
+        ) {
+          var l = __assign(
+              {},
+              null !==
+                (o =
+                  null ===
+                    (i =
+                      null === window || void 0 === window
+                        ? void 0
+                        : window.rep) || void 0 === i
+                    ? void 0
+                    : i.events) && void 0 !== o
+                ? o
+                : {}
+            ),
+            r = __assign(
+              {},
+              null !==
+                (d =
+                  null === window || void 0 === window ? void 0 : window.rep) &&
+                void 0 !== d
+                ? d
+                : {}
+            );
+          (r.events = l),
+            (r.on = function (n, i) {
+              switch (n) {
+                case "load":
+                  (null == l ? void 0 : l[n])
+                    ? Array.isArray(null == l ? void 0 : l[n]) && l[n].push(i)
+                    : (l[n] = [i]);
+              }
+            }),
+            (window.rep = r);
+        }
+      })();
+    </script>
     <script>
       const LOADER_SERVERS = {
         qa: "https://d1o5e9vlirdalo.cloudfront.net/vfLoader-qa.js",
@@ -22,6 +81,41 @@
           hideControls: true,
         },
       };
+      function checkForRepAndNotify() {
+        try {
+          // Check if window.rep is available
+          if (window.rep && typeof window.rep === "object") {
+            console.log("Rep object found, sending to parent:", window.rep);
+
+            // Send rep object to parent via postMessage
+            if (window.parent) {
+              window.parent.postMessage(
+                {
+                  type: "WEBCLIENT_REP_READY",
+                  repApi: window.rep,
+                  timestamp: Date.now(),
+                },
+                "*"
+              );
+            }
+
+            return true; // Found and sent
+          }
+          return false; // Not found yet
+        } catch (error) {
+          console.warn("Error checking for rep object:", error);
+          return false;
+        }
+      }
+
+      // Use rep load event (exact pattern provided by user)
+
+      if (window["rep"] && window["rep"]["on"]) {
+        window.rep.on("load", () => {
+          console.log("Rep load event fired!");
+          checkForRepAndNotify();
+        });
+      }
 
       // Extract query parameters from URL
       const urlParams = new URLSearchParams(window.location.search);
@@ -87,28 +181,6 @@
       body {
         width: 100%;
         height: 100%;
-        padding: 10px;
-      }
-      /* body,
-    :root {
-      display: -webkit-box;
-      display: -ms-flexbox;
-      display: flex;
-
-      -webkit-box-align: end;
-      -ms-flex-align: end;
-      align-items: flex-end;
-
-      -webkit-box-pack: end;
-      -ms-flex-pack: end;
-      justify-content: flex-end;
-    } */
-      @media (max-width: 550px) {
-        body {
-          padding: 10px;
-          /* height: 100%;
-        width: 100%; */
-        }
       }
     </style>
   </body>
